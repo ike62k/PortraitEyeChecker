@@ -1,3 +1,7 @@
+#User addition
+/test_image
+/test_after
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
