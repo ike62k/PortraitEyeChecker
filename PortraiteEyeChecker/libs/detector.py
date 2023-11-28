@@ -112,4 +112,4 @@ class Detector():
             return num_of_eye
         
         else:
-            return ["No face detected."]
+            return [-1]
