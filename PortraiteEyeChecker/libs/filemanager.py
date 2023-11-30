@@ -106,6 +106,13 @@ class FileManager():
             result += glob.glob(f"{self.folder}\\*.{extension}")
         return result
     
+    def get_full_files(self, active_file: str) -> list:
+        result = [active_file]
+        for extension in self.passive_extension:
+            if os.path.isfile(f"{active_file.rsplit(".", 1)[0]}.{extension}"):
+                result.append(f"{active_file.rsplit(".", 1)[0]}.{extension}")
+        return result
+  
     def move_to_fulleye(self, target: str):
         shutil.move(target, self.fulleye_folder)
 
@@ -118,15 +125,19 @@ class FileManager():
     def move_to_noface(self, target: str):
         shutil.move(target, self.noface_folder)
 
-    def selection_image(self, img_path: str, img_face_and_eye_list: list):
+    def selection_image(self, img_path_list: list, img_face_and_eye_list: list):
         if img_face_and_eye_list == [-1]:#中に-1が入るのは顔そのものが未検出のとき
-            self.move_to_noface(img_path)
+            for img_path in img_path_list:
+                self.move_to_noface(img_path)
             return None
         num_of_face = len(img_face_and_eye_list)
         num_of_eye = sum(img_face_and_eye_list)
         if 2*num_of_face == num_of_eye:
-            self.move_to_fulleye(img_path)
+            for img_path in img_path_list:
+                self.move_to_fulleye(img_path)
         elif num_of_eye != 0:
-            self.move_to_someeye(img_path)
+            for img_path in img_path_list:
+                self.move_to_someeye(img_path)
         elif num_of_eye == 0:
-            self.move_to_noeye(img_path)
+            for img_path in img_path_list:
+                self.move_to_noeye(img_path)
