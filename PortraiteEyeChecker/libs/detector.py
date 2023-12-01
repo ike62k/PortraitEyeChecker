@@ -41,35 +41,35 @@ class Detector():
         return self.__face_scaleFactor
     @face_scaleFactor.setter
     def face_scaleFactor(self,scaleFactor: float):
-        self.__face_scaleFactor = scaleFactor
+        self.__face_scaleFactor = float(scaleFactor)
 
     @property
     def face_minNeighbors(self) -> int:
         return self.__face_minNeighbors
     @face_minNeighbors.setter
     def face_minNeighbors(self,minNeighbors: int):
-        self.__face_minNeighbors = minNeighbors
+        self.__face_minNeighbors =int(minNeighbors)
 
     @property
     def eye_scaleFactor(self) -> float:
         return self.__eye_scaleFactor
     @eye_scaleFactor.setter
     def eye_scaleFactor(self,scaleFactor: float):
-        self.__eye_scaleFactor = scaleFactor
+        self.__eye_scaleFactor = float(scaleFactor)
 
     @property
     def eye_minNeighbors(self) -> int:
         return self.__eye_minNeighbors
     @eye_minNeighbors.setter
     def eye_minNeighbors(self,minNeighbors: int):
-        self.__eye_minNeighbors = minNeighbors
+        self.__eye_minNeighbors = int(minNeighbors)
 
     @property
     def resize_border(self) -> int:
         return self.__resize_border
     @resize_border.setter
     def resize_border(self, resolution: int):
-        self.__resize_border = resolution
+        self.__resize_border = int(resolution)
 
     def apply_config(self):
         self.face_model = self.config["USER"]["face_model"]
