@@ -112,6 +112,8 @@ class Controller():
         self.work.filemanager.make_all_folder()
         self.active_list = self.work.filemanager.get_active_files()
         self.status = "running_preprocess_end"
+        self.GUI.prog_max = len(self.active_list)
+        self.GUI.prog_bar.update(0, self.GUI.prog_max)
         for i, active_file in enumerate(self.active_list):
             if self.status == "running_preprocess_end":
                 self.GUI.console.update(f"現在処理中のファイル: {active_file}\n")
@@ -181,16 +183,15 @@ class Controller():
                 self.work.detector.face_minNeighbors = self.values["-face_minNeighbors-"]
                 self.work.detector.eye_scaleFactor = self.values["-eye_scaleFactor-"]
                 self.work.detector.eye_minNeighbors = self.values["-eye_minNeighbors-"]
-                if self.status == "running":
+                """if self.status == "running":
                     self.active_list = self.work.run_preprocess(self.values["-inputfolder-"])
                     self.status = "running_preprocess_end"
                 if self.status == "running_preprocess_end":
                     self.GUI.prog_max = len(self.active_list)
-                    self.GUI.prog_bar.update(0, self.GUI.prog_max)
-                    self.GUI.window.start_thread(lambda: self.thread_process(), end_key="-running_process_end-")
-                    print("start_thread")
+                    self.GUI.prog_bar.update(0, self.GUI.prog_max)"""
+                self.GUI.window.start_thread(lambda: self.run_process(), end_key="-running_process_end-")
 
-                if self.event == "running_process_end":
+                if self.event == "-running_process_end-":
                     self.status = "running_process_end"
                     self.GUI.window["-run-"].update(disabled=False)
                     self.GUI.window["-cancel-"].update(disabled=True)
@@ -199,7 +200,7 @@ class Controller():
                     self.status = "home"
 
                 if self.event == "-cancel-":
-                    print("cancel")
+                    print("cancelされました")
                     self.status = "cancel"
                     self.GUI.window["-run-"].update(disabled=False)
                     self.GUI.window["-cancel-"].update(disabled=True)
