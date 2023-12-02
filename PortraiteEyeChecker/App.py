@@ -37,8 +37,8 @@ class GUI():
         self.version_info = Version()       
 
         #入力セクジョン
-        self.active_list = []
-        self.passive_list = []
+        self.active_ext_list = []
+        self.passive_ext_list = []
         self.parts_add = sg.Column([
             [sg.Column([[sg.Text("拡張子を入力",expand_x=True, justification="LEFT")]], justification="CENTER")],
             [sg.Input(size=(18,1), key="-extension_input-", expand_x=True, enable_events=True)],
@@ -46,9 +46,9 @@ class GUI():
             [sg.Button("←activeから削除\ndelete from active", size=(16,2), key="-delete_active-", mouseover_colors="tomato"), sg.Button("passiveから削除→\ndelete from passive", size=(16,2), key="-delete_passive-", mouseover_colors="tomato")]
         ])
         self.extension_column = sg.Column(justification="CENTER", layout=[
-            [sg.Table(self.active_list, ["検知対象とする拡張子(active)"], num_rows=8, key="-table_active-", enable_click_events=True),
+            [sg.Table(self.active_ext_list, ["検知対象とする拡張子(active)"], num_rows=8, key="-table_active-", enable_click_events=True),
              self.parts_add,
-             sg.Table(self.passive_list, ["同時移動する拡張子(passive)"], num_rows=8, key="-table_passive-", enable_click_events=True)]
+             sg.Table(self.passive_ext_list, ["同時移動する拡張子(passive)"], num_rows=8, key="-table_passive-", enable_click_events=True)]
         ])
         self.frame_input = sg.Frame("入力 input", expand_x=True, layout=[
             [sg.Text("フォルダを選択してください"), sg.InputText(expand_x=True, key="-inputfolder-", enable_events=True), sg.FolderBrowse("参照", enable_events=True, initial_folder=os.getcwd())],
@@ -99,36 +99,59 @@ class Controller():
         self.GUI = GUI(self.work.config["DEFAULT"])
         self.status = "home"
 
+    def thread_process(self):
+        for i, active_file in enumerate(self.active_list):
+            if self.status == "running_preprocess_end":
+                self.GUI.console.update(f"現在処理中のファイル: {active_file}\n")
+                self.GUI.prog_bar.update(i+1, self.GUI.prog_max)
+                self.work.run_process(active_file)
+
+    def run_process(self):
+        self.work.filemanager.folder = self.values["-inputfolder-"]
+        self.work.filemanager.apply_config()
+        self.work.filemanager.make_all_folder()
+        self.active_list = self.work.filemanager.get_active_files()
+        self.status = "running_preprocess_end"
+        for i, active_file in enumerate(self.active_list):
+            if self.status == "running_preprocess_end":
+                self.GUI.console.update(f"現在処理中のファイル: {active_file}\n")
+                self.GUI.prog_bar.update(i+1, self.GUI.prog_max)
+                self.work.detector.input = active_file
+                self.work.filemanager.selection_image(self.work.filemanager.get_full_files(active_file), self.work.detector.detect())
+
+            if self.status == "cancel":
+                break
+
     def run(self):
         while True:
             self.event, self.values = self.GUI.window.read()
 
             if self.event != None and self.event[0] == "-table_active-": #self.eventは("-table_active-", "+CLICKED+", (0,0))といったような値で帰ってくる
-                self.GUI.window["-extension_input-"].update(self.GUI.active_list[self.event[2][0]])#(0,0)のうち0番目が選択された行の番号 valueには値が入らないので、self.GUI.active_listから値を取得して入力欄に入れる
+                self.GUI.window["-extension_input-"].update(self.GUI.active_ext_list[self.event[2][0]])#(0,0)のうち0番目が選択された行の番号 valueには値が入らないので、self.GUI.active_ext_listから値を取得して入力欄に入れる
 
             if self.event != None and self.event[0] == "-table_passive-":
-                self.GUI.window["-extension_input-"].update(self.GUI.passive_list[self.event[2][0]])
+                self.GUI.window["-extension_input-"].update(self.GUI.passive_ext_list[self.event[2][0]])
 
-            if self.event == "-add_active-" and self.values["-extension_input-"] != "" and self.values["-extension_input-"] not in self.GUI.active_list:
-                self.GUI.active_list.append(self.values["-extension_input-"].lower())
-                self.GUI.window["-table_active-"].update(self.GUI.active_list)
+            if self.event == "-add_active-" and self.values["-extension_input-"] != "" and self.values["-extension_input-"] not in self.GUI.active_ext_list:
+                self.GUI.active_ext_list.append(self.values["-extension_input-"].lower())
+                self.GUI.window["-table_active-"].update(self.GUI.active_ext_list)
                 self.GUI.window["-extension_input-"].update("")
             
-            if self.event == "-add_passive-" and self.values["-extension_input-"] != "" and self.values["-extension_input-"] not in self.GUI.passive_list:
-                self.GUI.passive_list.append(self.values["-extension_input-"].lower())
-                self.GUI.window["-table_passive-"].update(self.GUI.passive_list)
+            if self.event == "-add_passive-" and self.values["-extension_input-"] != "" and self.values["-extension_input-"] not in self.GUI.passive_ext_list:
+                self.GUI.passive_ext_list.append(self.values["-extension_input-"].lower())
+                self.GUI.window["-table_passive-"].update(self.GUI.passive_ext_list)
                 self.GUI.window["-extension_input-"].update("")
 
             if self.event == "-delete_active-" and self.values["-extension_input-"] != "":
-                if self.values["-extension_input-"] in self.GUI.active_list:
-                    self.GUI.active_list.remove(self.values["-extension_input-"].lower())
-                    self.GUI.window["-table_active-"].update(self.GUI.active_list)
+                if self.values["-extension_input-"] in self.GUI.active_ext_list:
+                    self.GUI.active_ext_list.remove(self.values["-extension_input-"].lower())
+                    self.GUI.window["-table_active-"].update(self.GUI.active_ext_list)
                     self.GUI.window["-extension_input-"].update("")
 
             if self.event == "-delete_passive-" and self.values["-extension_input-"] != "":
-                if self.values["-extension_input-"] in self.GUI.passive_list:
-                    self.GUI.passive_list.remove(self.values["-extension_input-"].lower())
-                    self.GUI.window["-table_passive-"].update(self.GUI.passive_list)
+                if self.values["-extension_input-"] in self.GUI.passive_ext_list:
+                    self.GUI.passive_ext_list.remove(self.values["-extension_input-"].lower())
+                    self.GUI.window["-table_passive-"].update(self.GUI.passive_ext_list)
                     self.GUI.window["-extension_input-"].update("")
 
             if self.event == "-reset_face_scaleFactor-":
@@ -149,31 +172,42 @@ class Controller():
                 self.GUI.window["-cancel-"].update(disabled=False)
                 if not os.path.isdir(self.values["-inputfolder-"]):
                     self.status = "err_inputfolder"
-                if self.GUI.active_list != []:
-                    self.work.filemanager.active_extension = self.GUI.active_list
+                if self.GUI.active_ext_list != []:
+                    self.work.filemanager.active_extension = self.GUI.active_ext_list
                 else:
-                    self.status = "err_active_list"
-                self.work.filemanager.passive_extension = self.GUI.passive_list
+                    self.status = "err_self.active_list"
+                self.work.filemanager.passive_extension = self.GUI.passive_ext_list
                 self.work.detector.face_scaleFactor = self.values["-face_scaleFactor-"]
                 self.work.detector.face_minNeighbors = self.values["-face_minNeighbors-"]
                 self.work.detector.eye_scaleFactor = self.values["-eye_scaleFactor-"]
                 self.work.detector.eye_minNeighbors = self.values["-eye_minNeighbors-"]
                 if self.status == "running":
-                    active_list = self.work.run_preprocess(self.values["-inputfolder-"])
+                    self.active_list = self.work.run_preprocess(self.values["-inputfolder-"])
                     self.status = "running_preprocess_end"
                 if self.status == "running_preprocess_end":
-                    self.GUI.prog_max = len(active_list)
+                    self.GUI.prog_max = len(self.active_list)
                     self.GUI.prog_bar.update(0, self.GUI.prog_max)
-                    for i, active_file in enumerate(active_list):
-                        self.GUI.console.update(f"現在処理中のファイル: {active_file}\n")
-                        self.GUI.prog_bar.update(i+1, self.GUI.prog_max)
-                        self.work.run_process(active_file)
+                    self.GUI.window.start_thread(lambda: self.thread_process(), end_key="-running_process_end-")
+                    print("start_thread")
+
+                if self.event == "running_process_end":
                     self.status = "running_process_end"
-                self.GUI.window["-run-"].update(disabled=False)
-                self.GUI.window["-cancel-"].update(disabled=True)
-                self.GUI.window["-prog_bar-"].update(0, self.GUI.prog_max)
-                self.GUI.window["-console-"].update(f"処理が終了しました。\n")
-                self.status = "home"
+                    self.GUI.window["-run-"].update(disabled=False)
+                    self.GUI.window["-cancel-"].update(disabled=True)
+                    self.GUI.window["-prog_bar-"].update(0, self.GUI.prog_max)
+                    self.GUI.window["-console-"].update(f"処理が終了しました。\n")
+                    self.status = "home"
+
+                if self.event == "-cancel-":
+                    print("cancel")
+                    self.status = "cancel"
+                    self.GUI.window["-run-"].update(disabled=False)
+                    self.GUI.window["-cancel-"].update(disabled=True)
+                    self.GUI.window["-prog_bar-"].update(0, self.GUI.prog_max)
+                    self.GUI.window["-console-"].update(f"処理を中断しました。\n")
+                    self.status = "home"
+
+
 
 
             
