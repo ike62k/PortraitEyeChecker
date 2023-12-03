@@ -13,25 +13,6 @@ class Work():
         self.detector = Detector(config_path)
         self.filemanager = FileManager(config_path)
 
-    def run_preprocess(self, input_folder: str) -> list:#input_folder(GUIからの入力)をactive拡張子を持つファイルのリストに変換する。
-        self.filemanager.folder = input_folder
-        self.filemanager.apply_config()
-        self.filemanager.make_all_folder()
-        return self.filemanager.get_active_files()
-
-    """
-    合間にGUIのStatus_Barを更新する
-    run_preprocessで得たファイルリストを一つずつrun_processに渡していき、
-    run_processの進捗をGUIのStatus_Barに表示する
-
-    """
-
-    def run_process(self, input_file: str):#input_file(active_fileの中の1つ)を顔認証して、振り分けを行う。
-            self.detector.input = input_file
-            result: list = self.detector.detect()
-            samename_files: list = self.filemanager.get_full_files(input_file)
-            self.filemanager.selection_image(samename_files, result)
-
 class GUI():
     def __init__(self, config) -> None:
         self.version_info = Version()       
@@ -99,13 +80,6 @@ class Controller():
         self.GUI = GUI(self.work.config["DEFAULT"])
         self.status = "home"
 
-    def thread_process(self):
-        for i, active_file in enumerate(self.active_list):
-            if self.status == "running_preprocess_end":
-                self.GUI.console.update(f"現在処理中のファイル: {active_file}\n")
-                self.GUI.prog_bar.update(i+1, self.GUI.prog_max)
-                self.work.run_process(active_file)
-
     def run_process(self):
         self.work.filemanager.folder = self.values["-inputfolder-"]
         self.work.filemanager.apply_config()
@@ -127,6 +101,7 @@ class Controller():
     def run(self):
         while True:
             self.event, self.values = self.GUI.window.read()
+            self.GUI.window["-console-"].update(f"現在のステータス: {self.status}\n")
 
             if self.event != None and self.event[0] == "-table_active-": #self.eventは("-table_active-", "+CLICKED+", (0,0))といったような値で帰ってくる
                 self.GUI.window["-extension_input-"].update(self.GUI.active_ext_list[self.event[2][0]])#(0,0)のうち0番目が選択された行の番号 valueには値が入らないので、self.GUI.active_ext_listから値を取得して入力欄に入れる
@@ -183,15 +158,10 @@ class Controller():
                 self.work.detector.face_minNeighbors = self.values["-face_minNeighbors-"]
                 self.work.detector.eye_scaleFactor = self.values["-eye_scaleFactor-"]
                 self.work.detector.eye_minNeighbors = self.values["-eye_minNeighbors-"]
-                """if self.status == "running":
-                    self.active_list = self.work.run_preprocess(self.values["-inputfolder-"])
-                    self.status = "running_preprocess_end"
-                if self.status == "running_preprocess_end":
-                    self.GUI.prog_max = len(self.active_list)
-                    self.GUI.prog_bar.update(0, self.GUI.prog_max)"""
                 self.GUI.window.start_thread(lambda: self.run_process(), end_key="-running_process_end-")
 
                 if self.event == "-running_process_end-":
+                    print("処理が終了しました")
                     self.status = "running_process_end"
                     self.GUI.window["-run-"].update(disabled=False)
                     self.GUI.window["-cancel-"].update(disabled=True)
@@ -208,10 +178,6 @@ class Controller():
                     self.GUI.window["-console-"].update(f"処理を中断しました。\n")
                     self.status = "home"
 
-
-
-
-            
 
             if self.event == sg.WIN_CLOSED:
                 break
