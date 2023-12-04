@@ -1,5 +1,6 @@
 import os
 import configparser
+import concurrent.futures
 import PySimpleGUI as sg
 from .libs.detector import Detector
 from .libs.filemanager import FileManager
@@ -15,7 +16,7 @@ class Work():
 
 class GUI():
     def __init__(self, config) -> None:
-        self.version_info = Version()       
+        self.version_info = Version()
 
         #入力セクジョン
         self.active_ext_list = []
@@ -78,7 +79,21 @@ class Controller():
     def __init__(self) -> None:
         self.work = Work(".\\config\\config.ini")
         self.GUI = GUI(self.work.config["DEFAULT"])
+        self.status_path = ".\\PortraiteEyeChecker\\data\\status.ini"
+        self.__status = configparser.ConfigParser()
+        self.__status.read(self.status_path, encoding="UTF-8")
         self.status = "home"
+
+    @property
+    def status(self) -> str:
+        self.__status.read(self.status_path, encoding="UTF-8")
+        return self.__status["DEFAULT"]["status"]
+    @status.setter
+    def status(self, value: str):
+        self.__status["DEFAULT"]["status"] = value
+        with open(self.status_path, "w", encoding="UTF-8") as f:
+            self.__status.write(f)
+
 
     def run_process(self):
         self.work.filemanager.folder = self.values["-inputfolder-"]
@@ -86,6 +101,7 @@ class Controller():
         self.work.filemanager.make_all_folder()
         self.active_list = self.work.filemanager.get_active_files()
         self.status = "running_preprocess_end"
+        self.active_list = self.work.filemanager.get_active_files()
         self.GUI.prog_max = len(self.active_list)
         self.GUI.prog_bar.update(0, self.GUI.prog_max)
         for i, active_file in enumerate(self.active_list):
@@ -96,7 +112,9 @@ class Controller():
                 self.work.filemanager.selection_image(self.work.filemanager.get_full_files(active_file), self.work.detector.detect())
 
             if self.status == "cancel":
-                break
+                return None
+        self.status = "running_process_end"
+        return None
 
     def run(self):
         while True:
@@ -143,8 +161,9 @@ class Controller():
             if self.event == "-reset_eye_minNeighbors-":
                 self.GUI.window["-eye_minNeighbors-"].update(self.work.config["DEFAULT"]["eye_minNeighbors"])
 
-            if self.event  == "-run-":
-                self.status = "running"
+            if self.event  == "-run-" and self.status == "home":
+                print("処理を開始します")
+                self.status = "running_start"
                 self.GUI.window["-run-"].update(disabled=True)
                 self.GUI.window["-cancel-"].update(disabled=False)
                 if not os.path.isdir(self.values["-inputfolder-"]):
@@ -158,28 +177,36 @@ class Controller():
                 self.work.detector.face_minNeighbors = self.values["-face_minNeighbors-"]
                 self.work.detector.eye_scaleFactor = self.values["-eye_scaleFactor-"]
                 self.work.detector.eye_minNeighbors = self.values["-eye_minNeighbors-"]
-                self.GUI.window.start_thread(lambda: self.run_process(), end_key="-running_process_end-")
+                if self.status == "running_start":
+                    self.GUI.window.start_thread(lambda: self.run_process(), end_key="-running_process_end-")
 
-                if self.event == "-running_process_end-":
+            if self.event == "-running_process_end-":
+                if self.status == "running_process_end":
                     print("処理が終了しました")
-                    self.status = "running_process_end"
-                    self.GUI.window["-run-"].update(disabled=False)
-                    self.GUI.window["-cancel-"].update(disabled=True)
-                    self.GUI.window["-prog_bar-"].update(0, self.GUI.prog_max)
-                    self.GUI.window["-console-"].update(f"処理が終了しました。\n")
-                    self.status = "home"
+                elif self.status == "cancel":
+                    print("処理が中断されました")
+                else:
+                    print("不明なエラーが発生しました")
+                self.status = "running_process_end"
+                self.GUI.window["-run-"].update(disabled=False)
+                self.GUI.window["-cancel-"].update(disabled=True)
+                self.GUI.window["-prog_bar-"].update(0, self.GUI.prog_max)
+                self.GUI.window["-console-"].update(f"処理が終了しました。\n")
+                self.status = "home"
 
-                if self.event == "-cancel-":
-                    print("cancelされました")
-                    self.status = "cancel"
-                    self.GUI.window["-run-"].update(disabled=False)
-                    self.GUI.window["-cancel-"].update(disabled=True)
-                    self.GUI.window["-prog_bar-"].update(0, self.GUI.prog_max)
-                    self.GUI.window["-console-"].update(f"処理を中断しました。\n")
-                    self.status = "home"
+            if self.event == "-cancel-":
+                print("cancelされました")
+                self.status = "cancel"
+                self.GUI.window["-run-"].update(disabled=False)
+                self.GUI.window["-cancel-"].update(disabled=True)
+                self.GUI.window["-prog_bar-"].update(0, self.GUI.prog_max)
+                self.GUI.window["-console-"].update(f"処理を中断しました。\n")
+                self.status = "home"
 
 
             if self.event == sg.WIN_CLOSED:
+                self.status = "home"
+
                 break
         
         self.GUI.window.close()
