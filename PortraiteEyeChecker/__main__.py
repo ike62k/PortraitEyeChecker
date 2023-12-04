@@ -6,6 +6,7 @@ except ImportError:
         "再インストールなどを検討してください。"
     )
     input("Enterを押して終了します。")
+    exit()
 
 try:
     import PySimpleGUI as sg
@@ -17,6 +18,7 @@ except ImportError:
         "https://www.pysimplegui.org/en/latest/"
         )
     input("Enterを押して終了します。")
+    exit()
 
-App = Controller(".\\config\\config.ini", ".\\PortraiteEyeChecker\\data\\status.ini")
+App = Controller(".\\config\\config.ini")
 App.run()

@@ -72,27 +72,12 @@ class GUI():
         #ウィンドウ定義
         self.window = sg.Window("Portraite Eye Checker", layout, size=(800,800), resizable=False)
 
-        
 
 class Controller():
-    def __init__(self, __config_path, __status_path) -> None:
+    def __init__(self, __config_path) -> None:
         self.work = Work(__config_path)
         self.GUI = GUI(self.work.config["DEFAULT"])
-        self.status_path =  __status_path
-        self.__status = configparser.ConfigParser()
-        self.__status.read(self.status_path, encoding="UTF-8")
         self.status = "home"
-
-    @property
-    def status(self) -> str:
-        self.__status.read(self.status_path, encoding="UTF-8")
-        return self.__status["DEFAULT"]["status"]
-    @status.setter
-    def status(self, value: str):
-        self.__status["DEFAULT"]["status"] = value
-        with open(self.status_path, "w", encoding="UTF-8") as f:
-            self.__status.write(f)
-
 
     def run_process(self):
         if not self.status == "running_start":
@@ -122,7 +107,6 @@ class Controller():
     def run(self):
         while True:
             self.event, self.values = self.GUI.window.read()
-            self.GUI.window["-console-"].update(f"現在のステータス: {self.status}\n")
 
             if self.event != None and self.event[0] == "-table_active-": #self.eventは("-table_active-", "+CLICKED+", (0,0))といったような値で帰ってくる
                 self.GUI.window["-extension_input-"].update(self.GUI.active_ext_list[self.event[2][0]])#(0,0)のうち0番目が選択された行の番号 valueには値が入らないので、self.GUI.active_ext_listから値を取得して入力欄に入れる
@@ -165,7 +149,7 @@ class Controller():
                 self.GUI.window["-eye_minNeighbors-"].update(self.work.config["DEFAULT"]["eye_minNeighbors"])
 
             if self.event  == "-run-" and self.status == "home":
-                print("処理を開始します")
+                self.GUI.window["-console-"].update("処理を開始します。\n")
                 self.status = "running_start"
                 self.GUI.window["-run-"].update(disabled=True)
                 self.GUI.window["-cancel-"].update(disabled=False)
@@ -186,15 +170,14 @@ class Controller():
 
             if self.event == "-running_process_end-":
                 if self.status == "running_process_end":
-                    print("処理が終了しました")
+                    self.GUI.window["-console-"].update("処理が終了しました。\n")
                 elif self.status == "cancel":
-                    print("処理が中断されました")
+                    self.GUI.window["-console-"].update("処理が中断されました。\n")
                 else:
-                    print("不明なエラーが発生しました")
+                    self.GUI.window["-console-"].update("処理が終了しましたが、エラーが発生しました。\n")
                 self.GUI.window["-run-"].update(disabled=False)
                 self.GUI.window["-cancel-"].update(disabled=True)
                 self.GUI.window["-prog_bar-"].update(0, self.GUI.prog_max)
-                self.GUI.window["-console-"].update(f"処理が終了しました。\n")
                 self.status = "home"
 
             if self.event == "-cancel-":
@@ -202,9 +185,8 @@ class Controller():
                 self.GUI.window["-run-"].update(disabled=False)
                 self.GUI.window["-cancel-"].update(disabled=True)
                 self.GUI.window["-prog_bar-"].update(0, self.GUI.prog_max)
-                self.GUI.window["-console-"].update(f"処理を中断しました。\n")
+                self.GUI.window["-console-"].update("Cancelボタンが押されました。\n")
                 self.status = "home"
-
 
             if self.event == sg.WIN_CLOSED:
                 self.status = "home"
