@@ -1,6 +1,5 @@
 import os
 import configparser
-import concurrent.futures
 import PySimpleGUI as sg
 from .libs.detector import Detector
 from .libs.filemanager import FileManager
@@ -76,10 +75,10 @@ class GUI():
         
 
 class Controller():
-    def __init__(self) -> None:
-        self.work = Work(".\\config\\config.ini")
+    def __init__(self, __config_path, __status_path) -> None:
+        self.work = Work(__config_path)
         self.GUI = GUI(self.work.config["DEFAULT"])
-        self.status_path = ".\\PortraiteEyeChecker\\data\\status.ini"
+        self.status_path =  __status_path
         self.__status = configparser.ConfigParser()
         self.__status.read(self.status_path, encoding="UTF-8")
         self.status = "home"
@@ -96,11 +95,15 @@ class Controller():
 
 
     def run_process(self):
+        if not self.status == "running_start":
+            return None
+        #running_preprocess_start
         self.work.filemanager.folder = self.values["-inputfolder-"]
         self.work.filemanager.apply_config()
         self.work.filemanager.make_all_folder()
         self.active_list = self.work.filemanager.get_active_files()
         self.status = "running_preprocess_end"
+        #runnning_process_start
         self.active_list = self.work.filemanager.get_active_files()
         self.GUI.prog_max = len(self.active_list)
         self.GUI.prog_bar.update(0, self.GUI.prog_max)
@@ -168,17 +171,18 @@ class Controller():
                 self.GUI.window["-cancel-"].update(disabled=False)
                 if not os.path.isdir(self.values["-inputfolder-"]):
                     self.status = "err_inputfolder"
+                    sg.PopupError("入力フォルダが存在しません")
                 if self.GUI.active_ext_list != []:
                     self.work.filemanager.active_extension = self.GUI.active_ext_list
                 else:
                     self.status = "err_self.active_list"
+                    sg.PopupError("検知対象とする拡張子が入力されていません")
                 self.work.filemanager.passive_extension = self.GUI.passive_ext_list
                 self.work.detector.face_scaleFactor = self.values["-face_scaleFactor-"]
                 self.work.detector.face_minNeighbors = self.values["-face_minNeighbors-"]
                 self.work.detector.eye_scaleFactor = self.values["-eye_scaleFactor-"]
                 self.work.detector.eye_minNeighbors = self.values["-eye_minNeighbors-"]
-                if self.status == "running_start":
-                    self.GUI.window.start_thread(lambda: self.run_process(), end_key="-running_process_end-")
+                self.GUI.window.start_thread(lambda: self.run_process(), end_key="-running_process_end-")
 
             if self.event == "-running_process_end-":
                 if self.status == "running_process_end":
@@ -187,7 +191,6 @@ class Controller():
                     print("処理が中断されました")
                 else:
                     print("不明なエラーが発生しました")
-                self.status = "running_process_end"
                 self.GUI.window["-run-"].update(disabled=False)
                 self.GUI.window["-cancel-"].update(disabled=True)
                 self.GUI.window["-prog_bar-"].update(0, self.GUI.prog_max)
@@ -195,7 +198,6 @@ class Controller():
                 self.status = "home"
 
             if self.event == "-cancel-":
-                print("cancelされました")
                 self.status = "cancel"
                 self.GUI.window["-run-"].update(disabled=False)
                 self.GUI.window["-cancel-"].update(disabled=True)

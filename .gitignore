@@ -1,7 +1,8 @@
 #User addition
 /test_image
 /test_after
-
+/.vscode
+launch.json
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
