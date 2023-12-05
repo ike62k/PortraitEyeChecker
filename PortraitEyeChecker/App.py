@@ -71,7 +71,7 @@ class GUI():
         ]
 
         #ウィンドウ定義
-        self.window = sg.Window("Portraite Eye Checker", layout, size=(800,800), resizable=False)
+        self.window = sg.Window("Portrait Eye Checker", layout, size=(800,800), resizable=False)
 
 
 class Controller():

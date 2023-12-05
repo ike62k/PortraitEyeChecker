@@ -1,5 +1,5 @@
 #requirements.txt 20231205
-#for PortraiteEyeChecker
+#for PortraitEyeChecker
 #
 #Windows 10 or 11 (x64)
 #Python 3.12.0 or later (x64)

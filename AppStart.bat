@@ -1,1 +1,1 @@
-Python.exe -m PortraiteEyeChecker
+Python.exe -m PortraitEyeChecker

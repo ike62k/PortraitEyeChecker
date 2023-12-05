@@ -8,8 +8,8 @@ from tkinter import filedialog
 
 sys.path.append(os.path.dirname(__file__).rsplit("\\", 1)[0])
 
-from PortraiteEyeChecker.libs.detector import Detector
-from PortraiteEyeChecker.libs.filemanager import FileManager
+from PortraitEyeChecker.libs.detector import Detector
+from PortraitEyeChecker.libs.filemanager import FileManager
 
 if __name__ == "__main__":
     os.chdir(f"{os.path.dirname(__file__).rsplit("\\", 1)[0]}")

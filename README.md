@@ -1,4 +1,4 @@
-# PortraitEyeChecker
+# PortraityeChecker
 人物写真から目瞑り写真を除外するツール Tool to exclude photos of people with their eyes closed from portraits photos
 
 ## はじめに
@@ -35,8 +35,8 @@ $(face), (eye)$は顔,目の検知された個数
 
 2,3の行程はrequirement.txtを利用して `pip install -r requirements.txt`でも可能です。
 
-4. [Release](https://github.com/ike62k/PortraitEyeChecker/releases)から、ソースコードをダウンロードし、適当な場所で展開します。
-5. コマンドで`Python -m PortraiteEyeChecker`を実行するか、AppStart.batを実行します。
+4. [Release](https://github.com/ike62k/PortraityeChecker/releases)から、ソースコードをダウンロードし、適当な場所で展開します。
+5. コマンドで`Python -m PortraitEyeChecker`を実行するか、AppStart.batを実行します。
 
 ## GUIの操作方法
 
