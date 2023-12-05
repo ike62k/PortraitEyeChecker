@@ -16,6 +16,7 @@ class Work():
 class GUI():
     def __init__(self, config) -> None:
         self.version_info = Version()
+        sg.theme(config["theme"])
 
         #入力セクジョン
         self.active_ext_list = []

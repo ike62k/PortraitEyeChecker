@@ -1,0 +1,8 @@
+#requirements.txt 20231205
+#for PortraiteEyeChecker
+#
+#Windows 10 or 11 (x64)
+#Python 3.12.0 or later (x64)
+
+opencv-python >= 4.8.1.78
+PySimpleGUI >= 4.60.5
