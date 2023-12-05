@@ -1,7 +1,4 @@
 import cv2
-import os
-import glob
-import shutil
 import configparser
 
 class Detector():
