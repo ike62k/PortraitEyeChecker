@@ -6,7 +6,7 @@ class Version:
     def __init__(self):
         self.__version = "1.0"
         self.__subver = "0"
-        self.date = "20231201"
+        self.__date = "20231206"
 
     @property
     def subver(self):
@@ -23,3 +23,10 @@ class Version:
     @version.setter
     def version(self, new_version):
         self.__version = new_version
+
+    @property
+    def date(self):
+        return self.__date
+    @date.setter
+    def date(self, new_date):
+        self.__date = new_date
