@@ -108,8 +108,8 @@ class FileManager():
     def get_full_files(self, active_file: str) -> list:
         result = [active_file]
         for extension in self.passive_extension:
-            if os.path.isfile(f"{active_file.rsplit(".", 1)[0]}.{extension}"):
-                result.append(f"{active_file.rsplit(".", 1)[0]}.{extension}")
+            file_list = glob.glob(f"{active_file.rsplit(".", 1)[0]}*.{extension}")
+            result += file_list
         return result
   
     def move_to_fulleye(self, target: str):

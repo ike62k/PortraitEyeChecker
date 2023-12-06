@@ -110,10 +110,16 @@ class Controller():
             self.event, self.values = self.GUI.window.read()
 
             if self.event != None and self.event[0] == "-table_active-": #self.eventは("-table_active-", "+CLICKED+", (0,0))といったような値で帰ってくる
-                self.GUI.window["-extension_input-"].update(self.GUI.active_ext_list[self.event[2][0]])#(0,0)のうち0番目が選択された行の番号 valueには値が入らないので、self.GUI.active_ext_listから値を取得して入力欄に入れる
+                try:
+                    self.GUI.window["-extension_input-"].update(self.GUI.active_ext_list[self.event[2][0]])#(0,0)のうち0番目が選択された行の番号 valueには値が入らないので、self.GUI.active_ext_listから値を取得して入力欄に入れる
+                except:#選択された行がない場合は何もしない(リストが空だとエラーが出る)
+                    pass
 
             if self.event != None and self.event[0] == "-table_passive-":
-                self.GUI.window["-extension_input-"].update(self.GUI.passive_ext_list[self.event[2][0]])
+                try:
+                    self.GUI.window["-extension_input-"].update(self.GUI.passive_ext_list[self.event[2][0]])
+                except:#同上、エラーが出るのはリストが空の場合
+                    pass
 
             if self.event == "-add_active-" and self.values["-extension_input-"] != "" and self.values["-extension_input-"] not in self.GUI.active_ext_list:
                 self.GUI.active_ext_list.append(self.values["-extension_input-"].lower())
